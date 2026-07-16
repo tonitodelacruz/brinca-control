@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#143a5e">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icono-192.png">
+  <title>BrincaControl</title>
+  <style>
+    :root{
+      --azul:#143a5e;--azul2:#eaf2f8;--verde:#198754;--verde2:#dcfce7;
+      --amarillo:#f4c430;--amarillo2:#fef9c3;--naranja:#f28c28;--naranja2:#ffedd5;
+      --rojo:#dc3545;--rojo2:#fee2e2;--fondo:#f3f5f7;--texto:#1f2937;
+      --gris:#5f6b76;--blanco:#fff;--borde:#dfe5ea;--sombra:0 5px 18px rgba(0,0,0,.09)
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;min-height:100%;font-family:Arial,Helvetica,sans-serif;background:var(--fondo);color:var(--texto)}
+    body{padding-bottom:34px}
+    button,input,textarea{font:inherit}
+    button{cursor:pointer;-webkit-tap-highlight-color:transparent}
+    textarea{resize:vertical}
+    .oculto{display:none!important}
+    .app{width:100%;max-width:900px;margin:0 auto}
+    .encabezado{padding:22px 18px;color:#fff;background:var(--azul);text-align:center;border-radius:0 0 24px 24px;box-shadow:var(--sombra)}
+    .encabezado h1{margin:0;font-size:27px}.encabezado p{margin:6px 0 0;opacity:.9}
+    .reloj{margin-top:13px;font-size:25px;font-weight:700;letter-spacing:1px}.fecha{margin-top:3px;font-size:13px;opacity:.85}
+    .contenido{padding:16px}.estado{margin-bottom:14px;padding:11px 14px;border-radius:12px;font-size:14px;text-align:center}
+    .online{color:#166534;background:#dcfce7}.offline{color:#92400e;background:#fef3c7}
+    .resumen{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:16px}
+    .resumen-item{padding:16px 12px;background:#fff;border-radius:16px;box-shadow:var(--sombra);text-align:center}
+    .resumen-valor{display:block;color:var(--azul);font-size:24px;font-weight:700}.resumen-etiqueta{display:block;margin-top:5px;color:var(--gris);font-size:13px}
+    .panel{margin-bottom:16px;padding:18px;background:#fff;border-radius:18px;box-shadow:var(--sombra)}
+    .panel h2{margin:0 0 15px;color:var(--azul);font-size:20px}
+    .fila{display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px solid var(--borde)}
+    .fila:last-child{border-bottom:none}.fila span:first-child{color:var(--gris)}.fila span:last-child{font-weight:700;text-align:right}
+    .acciones{display:grid;grid-template-columns:1fr;gap:11px}
+    .boton{width:100%;min-height:50px;padding:12px 15px;border:none;border-radius:13px;font-weight:700}
+    .primario{color:#fff;background:var(--verde)}.secundario{color:var(--azul);background:var(--azul2)}
+    .corte{color:#fff;background:var(--azul)}.adicional{color:#7c2d12;background:var(--naranja2)}
+    .pagar{color:#fff;background:var(--verde)}.finalizar{color:#fff;background:var(--azul)}.peligro{color:#fff;background:var(--rojo)}
+    .boton:disabled{opacity:.55;cursor:not-allowed}
+    .lista{display:grid;gap:14px}.sin-turnos{padding:24px 15px;color:var(--gris);background:#f8fafc;border:2px dashed var(--borde);border-radius:14px;text-align:center}
+    .tarjeta{padding:17px;border:2px solid transparent;border-radius:17px;background:var(--verde2)}
+    .verde{background:var(--verde2)}.amarillo{background:var(--amarillo2);border-color:var(--amarillo)}
+    .naranja{background:var(--naranja2);border-color:var(--naranja)}.rojo{background:var(--rojo2);border-color:var(--rojo)}
+    .parpadeo{animation:parpadear .8s infinite}@keyframes parpadear{50%{opacity:.55}}
+    .turno-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+    .turno-head h3{margin:0;color:var(--azul);font-size:21px}.turno-head p{margin:4px 0 0;color:var(--gris);font-size:14px}
+    .badge{padding:6px 9px;border-radius:999px;font-size:12px;font-weight:700;background:#fff}.pendiente{color:#991b1b}.pagado{color:#166534}
+    .cronometro{margin:16px 0 5px;color:var(--azul);font-size:38px;font-weight:700;text-align:center}.terminado{color:var(--rojo);font-size:22px}
+    .detalles{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:12px}
+    .dato{padding:9px;background:rgba(255,255,255,.75);border-radius:10px;text-align:center}.dato small{display:block;color:var(--gris)}.dato strong{display:block;margin-top:3px}
+    .acciones-turno{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:13px}
+    .modal{position:fixed;z-index:1000;inset:0;display:flex;align-items:center;justify-content:center;padding:18px}
+    .modal-bg{position:absolute;inset:0;background:rgba(15,23,42,.65)}
+    .modal-box{position:relative;z-index:1;width:100%;max-width:430px;max-height:92vh;overflow-y:auto;padding:24px;background:#fff;border-radius:20px;box-shadow:0 18px 45px rgba(0,0,0,.25)}
+    .modal-box h2{margin:0 0 8px;color:var(--azul)}.modal-box p{margin:0 0 20px;color:var(--gris);line-height:1.45}
+    .modal-box label{display:block;margin:14px 0 7px;font-weight:700}.campo{width:100%;min-height:50px;padding:12px 14px;border:1px solid var(--borde);border-radius:12px;outline:none}
+    .modal-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:20px}
+    .error{margin-top:12px;padding:10px 12px;color:#991b1b;background:#fee2e2;border-radius:10px;font-size:14px}
+    .corte-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:16px}
+    .corte-dato{padding:13px 10px;background:#f8fafc;border:1px solid var(--borde);border-radius:12px;text-align:center}.corte-dato small{display:block;color:var(--gris);font-size:12px}.corte-dato strong{display:block;margin-top:5px;color:var(--azul);font-size:20px}
+    .diferencia{margin-top:14px;padding:15px;border-radius:12px;background:var(--azul2);text-align:center}.diferencia span{display:block;color:var(--gris);font-size:13px}.diferencia strong{display:block;margin-top:5px;font-size:24px}
+    .ok{color:var(--verde)}.faltante{color:var(--rojo)}.sobrante{color:var(--naranja)}
+    .aviso{position:fixed;z-index:2000;left:50%;bottom:20px;width:calc(100% - 32px);max-width:450px;padding:13px 16px;color:#fff;background:#1f2937;border-radius:12px;text-align:center;transform:translateX(-50%);box-shadow:var(--sombra)}
+    @media(min-width:700px){.resumen{grid-template-columns:repeat(4,1fr)}.acciones{grid-template-columns:2fr 1fr}.acciones-turno{grid-template-columns:repeat(4,1fr)}.encabezado{margin-top:15px;border-radius:24px}}
+  </style>
+</head>
+<body>
+<div class="app">
+  <header class="encabezado">
+    <h1>BrincaControl</h1><p>MobiRent</p>
+    <div id="reloj" class="reloj">--:--:--</div><div id="fecha" class="fecha"></div>
+  </header>
+  <main class="contenido">
+    <div id="estadoRed" class="estado online">Con conexión</div>
+    <section class="resumen">
+      <div class="resumen-item"><span id="activos" class="resumen-valor">0</span><span class="resumen-etiqueta">Niños activos</span></div>
+      <div class="resumen-item"><span class="resumen-valor">5</span><span class="resumen-etiqueta">Capacidad máxima</span></div>
+      <div class="resumen-item"><span id="atendidos" class="resumen-valor">0</span><span class="resumen-etiqueta">Atendidos hoy</span></div>
+      <div class="resumen-item"><span id="generado" class="resumen-valor">$0</span><span class="resumen-etiqueta">Total generado</span></div>
+    </section>
+    <section class="panel">
+      <h2>Jornada actual</h2>
+      <div class="fila"><span>Estado</span><span id="estadoJornada">Sin abrir</span></div>
+      <div class="fila"><span>Encargado</span><span id="encargado">Sin asignar</span></div>
+      <div class="fila"><span>Turno normal</span><span>10 minutos por $20</span></div>
+      <div class="fila"><span>Aviso previo</span><span>2 minutos antes</span></div>
+    </section>
+    <section class="panel">
+      <h2>Acciones</h2>
+      <div class="acciones">
+        <button id="btnAgregar" class="boton primario" disabled>+ Agregar niño</button>
+        <button id="btnJornada" class="boton secundario">Abrir jornada</button>
+      </div>
+    </section>
+    <section class="panel"><h2>Turnos activos</h2><div id="lista" class="lista"><div class="sin-turnos">Todavía no hay niños registrados.</div></div></section>
+    <button id="btnCorte" class="boton corte" disabled>Realizar corte de caja</button>
+  </main>
+</div>
+
+<div id="modalJornada" class="modal oculto"><div class="modal-bg"></div><div class="modal-box">
+  <h2>Abrir jornada</h2><p>Escribe el nombre de la persona que atenderá el trampolín.</p>
+  <label>Nombre del encargado</label><input id="campoEncargado" class="campo" maxlength="60" placeholder="Ejemplo: Antonio">
+  <div id="errorJornada" class="error oculto"></div>
+  <div class="modal-actions"><button class="boton secundario" onclick="cerrarModal('modalJornada')">Cancelar</button><button class="boton primario" onclick="abrirJornada()">Abrir jornada</button></div>
+</div></div>
+
+<div id="modalTurno" class="modal oculto"><div class="modal-bg"></div><div class="modal-box">
+  <h2>Agregar niño</h2><p>Turno de 10 minutos por $20.</p>
+  <label>Nombre o apodo</label><input id="campoNombre" class="campo" maxlength="50" placeholder="Ejemplo: Mateo">
+  <label>Característica</label><input id="campoCaracteristica" class="campo" maxlength="80" placeholder="Ejemplo: Playera roja">
+  <div id="errorTurno" class="error oculto"></div>
+  <div class="modal-actions"><button class="boton secundario" onclick="cerrarModal('modalTurno')">Cancelar</button><button class="boton primario" onclick="registrarTurno()">Iniciar turno</button></div>
+</div></div>
+
+<div id="modalCorte" class="modal oculto"><div class="modal-bg"></div><div class="modal-box">
+  <h2>Corte de caja</h2><p>Revisa el resumen y confirma el cierre de la jornada.</p>
+  <div class="corte-grid">
+    <div class="corte-dato"><small>Niños atendidos</small><strong id="cNinos">0</strong></div>
+    <div class="corte-dato"><small>Minutos vendidos</small><strong id="cMinutos">0</strong></div>
+    <div class="corte-dato"><small>Total generado</small><strong id="cGenerado">$0</strong></div>
+    <div class="corte-dato"><small>Total pagado</small><strong id="cPagado">$0</strong></div>
+    <div class="corte-dato"><small>Pendiente</small><strong id="cPendiente">$0</strong></div>
+    <div class="corte-dato"><small>Turnos activos</small><strong id="cActivos">0</strong></div>
+  </div>
+  <label>Efectivo contado</label><input id="campoEfectivo" class="campo" type="number" min="0" step="0.01" oninput="actualizarDiferencia()">
+  <div class="diferencia"><span>Diferencia</span><strong id="cDiferencia" class="ok">$0</strong></div>
+  <label>Observaciones</label><textarea id="campoObs" class="campo" rows="3" maxlength="300"></textarea>
+  <div id="errorCorte" class="error oculto"></div>
+  <div class="modal-actions"><button class="boton secundario" onclick="cerrarModal('modalCorte')">Cancelar</button><button class="boton peligro" onclick="cerrarJornada()">Cerrar jornada</button></div>
+</div></div>
+
+<div id="aviso" class="aviso oculto"></div>
+
+<script>
+const CONFIG={minutos:10,precio:20,minCorto:5,precioCorto:10,minLargo:10,precioLargo:20,aviso:2,capacidad:5};
+const CLAVE='brincaControlDatosV1';
+let datos=cargarDatos();
+let avisados=new Set();
+
+function cargarDatos(){
+  try{return JSON.parse(localStorage.getItem(CLAVE))||{jornada:null,turnos:[],historial:[],cortes:[]}}
+  catch(e){return{jornada:null,turnos:[],historial:[],cortes:[]}}
+}
+function guardar(){localStorage.setItem(CLAVE,JSON.stringify(datos))}
+function id(pref){return pref+'-'+Date.now()+'-'+Math.floor(1000+Math.random()*9000)}
+function dinero(n){return '$'+(Number(n)||0).toLocaleString('es-MX',{maximumFractionDigits:2})}
+function ahoraTexto(){return new Date().toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'})}
+function escapar(s){return String(s||'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
+function activos(){return datos.turnos.filter(t=>t.estadoTurno==='ACTIVO'||t.estadoTurno==='TIEMPO_TERMINADO')}
+function resumen(){
+  const ts=datos.turnos;
+  return {
+    activos:activos().length,
+    atendidos:ts.filter(t=>t.estadoTurno!=='CANCELADO').length,
+    minutos:ts.filter(t=>t.estadoTurno!=='CANCELADO').reduce((a,t)=>a+t.minutosTotales,0),
+    generado:ts.filter(t=>t.estadoTurno!=='CANCELADO').reduce((a,t)=>a+t.totalCobrar,0),
+    pagado:ts.filter(t=>t.estadoPago==='PAGADO').reduce((a,t)=>a+t.totalCobrar,0)
+  }
+}
+function iniciar(){
+  actualizarReloj();setInterval(actualizarReloj,1000);setInterval(actualizarCronometros,1000);
+  document.getElementById('btnJornada').onclick=()=>mostrarModal('modalJornada');
+  document.getElementById('btnAgregar').onclick=()=>mostrarModal('modalTurno');
+  document.getElementById('btnCorte').onclick=abrirCorte;
+  window.addEventListener('online',actualizarRed);window.addEventListener('offline',actualizarRed);
+  actualizarRed();render();
+  if('serviceWorker' in navigator){navigator.serviceWorker.register('./service-worker.js').catch(console.error)}
+}
+function actualizarRed(){
+  const e=document.getElementById('estadoRed');
+  if(navigator.onLine){e.className='estado online';e.textContent='Con conexión · los datos se guardan en este dispositivo'}
+  else{e.className='estado offline';e.textContent='Sin conexión · la aplicación sigue funcionando y guarda localmente'}
+}
+function actualizarReloj(){
+  const a=new Date();document.getElementById('reloj').textContent=a.toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  const f=a.toLocaleDateString('es-MX',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  document.getElementById('fecha').textContent=f.charAt(0).toUpperCase()+f.slice(1)
+}
+function render(){
+  const j=datos.jornada;
+  document.getElementById('estadoJornada').textContent=j?'Abierta desde '+j.horaApertura:'Sin abrir';
+  document.getElementById('encargado').textContent=j?j.encargado:'Sin asignar';
+  document.getElementById('btnJornada').disabled=!!j;document.getElementById('btnJornada').textContent=j?'Jornada abierta':'Abrir jornada';
+  document.getElementById('btnAgregar').disabled=!j;document.getElementById('btnCorte').disabled=!j;
+  const r=resumen();document.getElementById('activos').textContent=r.activos;document.getElementById('atendidos').textContent=r.atendidos;document.getElementById('generado').textContent=dinero(r.generado);
+  renderTurnos();
+}
+function mostrarModal(id){document.getElementById(id).classList.remove('oculto')}
+function cerrarModal(id){document.getElementById(id).classList.add('oculto')}
+function error(id,msg){const e=document.getElementById(id);e.textContent=msg;e.classList.remove('oculto')}
+function limpiarError(id){document.getElementById(id).classList.add('oculto')}
+function aviso(msg){const e=document.getElementById('aviso');e.textContent=msg;e.classList.remove('oculto');clearTimeout(aviso.t);aviso.t=setTimeout(()=>e.classList.add('oculto'),3000)}
+function abrirJornada(){
+  const nombre=document.getElementById('campoEncargado').value.trim();
+  if(nombre.length<2)return error('errorJornada','Escribe el nombre del encargado.');
+  datos.jornada={id:id('JOR'),encargado:nombre,horaApertura:ahoraTexto(),fecha:new Date().toISOString()};
+  datos.turnos=[];guardar();cerrarModal('modalJornada');limpiarError('errorJornada');render();aviso('Jornada abierta correctamente.')
+}
+function registrarTurno(){
+  const nombre=document.getElementById('campoNombre').value.trim(),car=document.getElementById('campoCaracteristica').value.trim();
+  if(nombre.length<2)return error('errorTurno','Escribe el nombre o apodo.');
+  if(activos().length>=CONFIG.capacidad)return error('errorTurno','Se alcanzó la capacidad máxima.');
+  const ini=Date.now(),fin=ini+CONFIG.minutos*60000;
+  datos.turnos.push({id:id('TUR'),nombre,caracteristica:car,horaInicio:ini,horaFin:fin,minutosIniciales:CONFIG.minutos,minutosAdicionales:0,minutosTotales:CONFIG.minutos,costoInicial:CONFIG.precio,costoAdicional:0,totalCobrar:CONFIG.precio,estadoPago:'PENDIENTE',estadoTurno:'ACTIVO'});
+  guardar();document.getElementById('campoNombre').value='';document.getElementById('campoCaracteristica').value='';cerrarModal('modalTurno');limpiarError('errorTurno');render();aviso('Turno registrado.')
+}
+function renderTurnos(){
+  const list=document.getElementById('lista'),arr=activos().sort((a,b)=>a.horaFin-b.horaFin);
+  if(!arr.length){list.innerHTML='<div class="sin-turnos">Todavía no hay niños registrados.</div>';return}
+  list.innerHTML=arr.map(t=>`<article id="tar-${t.id}" class="tarjeta verde">
+    <div class="turno-head"><div><h3>${escapar(t.nombre)}</h3><p>${escapar(t.caracteristica||'Sin característica')}</p></div>
+    <span class="badge ${t.estadoPago==='PAGADO'?'pagado':'pendiente'}">${t.estadoPago}</span></div>
+    <div id="cro-${t.id}" class="cronometro">--:--</div>
+    <div class="detalles">
+      <div class="dato"><small>Termina</small><strong>${new Date(t.horaFin).toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'})}</strong></div>
+      <div class="dato"><small>Total a cobrar</small><strong>${dinero(t.totalCobrar)}</strong></div>
+      <div class="dato"><small>Tiempo total</small><strong>${t.minutosTotales} min</strong></div>
+      <div class="dato"><small>Adicional</small><strong>${t.minutosAdicionales} min</strong></div>
+    </div>
+    <div class="acciones-turno">
+      <button class="boton adicional" onclick="agregarTiempo('${t.id}',${CONFIG.minCorto},${CONFIG.precioCorto})">+${CONFIG.minCorto} min</button>
+      <button class="boton adicional" onclick="agregarTiempo('${t.id}',${CONFIG.minLargo},${CONFIG.precioLargo})">+${CONFIG.minLargo} min</button>
+      <button class="boton pagar" onclick="cobrar('${t.id}')" ${t.estadoPago==='PAGADO'?'disabled':''}>${t.estadoPago==='PAGADO'?'Pagado':'Cobrar'}</button>
+      <button class="boton finalizar" onclick="finalizar('${t.id}')">Finalizar</button>
+    </div></article>`).join('');
+  actualizarCronometros()
+}
+function actualizarCronometros(){
+  const now=Date.now();
+  activos().forEach(t=>{
+    const c=document.getElementById('cro-'+t.id),tar=document.getElementById('tar-'+t.id);if(!c||!tar)return;
+    tar.className='tarjeta';const restante=t.horaFin-now;
+    if(restante<=0){c.textContent='TIEMPO TERMINADO';c.className='cronometro terminado';tar.classList.add('rojo','parpadeo');t.estadoTurno='TIEMPO_TERMINADO';guardar();if(!avisados.has(t.id)){avisados.add(t.id);alarma()}return}
+    c.className='cronometro';const seg=Math.ceil(restante/1000),m=Math.floor(seg/60),s=seg%60;c.textContent=String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+    const mins=restante/60000;if(mins<=1)tar.classList.add('naranja');else if(mins<=CONFIG.aviso)tar.classList.add('amarillo');else tar.classList.add('verde')
+  })
+}
+function agregarTiempo(idTurno,min,costo){
+  const t=datos.turnos.find(x=>x.id===idTurno);if(!t)return;
+  t.horaFin=Math.max(Date.now(),t.horaFin)+min*60000;t.minutosAdicionales+=min;t.minutosTotales+=min;t.costoAdicional+=costo;t.totalCobrar+=costo;t.estadoTurno='ACTIVO';avisados.delete(t.id);guardar();render();aviso('Se agregaron '+min+' minutos.')
+}
+function cobrar(idTurno){const t=datos.turnos.find(x=>x.id===idTurno);if(!t)return;t.estadoPago='PAGADO';guardar();render();aviso('Pago registrado.')}
+function finalizar(idTurno){
+  const t=datos.turnos.find(x=>x.id===idTurno);if(!t)return;
+  const msg=t.estadoPago==='PAGADO'?'¿Confirmas que el niño ya bajó?':'Este turno sigue pendiente de pago. ¿Finalizar de todos modos?';
+  if(!confirm(msg))return;t.estadoTurno='FINALIZADO';t.horaFinalizacion=Date.now();guardar();render();aviso('Turno finalizado.')
+}
+function alarma(){
+  try{const C=window.AudioContext||window.webkitAudioContext;if(C){const ctx=new C();[0,.35,.7].forEach(d=>{const o=ctx.createOscillator(),g=ctx.createGain();o.frequency.value=880;g.gain.value=.2;o.connect(g);g.connect(ctx.destination);o.start(ctx.currentTime+d);o.stop(ctx.currentTime+d+.22)})}}catch(e){}
+  if(navigator.vibrate)navigator.vibrate([300,150,300])
+}
+function abrirCorte(){
+  const r=resumen();document.getElementById('cNinos').textContent=r.atendidos;document.getElementById('cMinutos').textContent=r.minutos;
+  document.getElementById('cGenerado').textContent=dinero(r.generado);document.getElementById('cPagado').textContent=dinero(r.pagado);
+  document.getElementById('cPendiente').textContent=dinero(r.generado-r.pagado);document.getElementById('cActivos').textContent=r.activos;
+  document.getElementById('campoEfectivo').value=r.pagado;document.getElementById('campoObs').value='';limpiarError('errorCorte');actualizarDiferencia();mostrarModal('modalCorte')
+}
+function actualizarDiferencia(){const r=resumen(),e=Number(document.getElementById('campoEfectivo').value)||0,d=e-r.pagado,el=document.getElementById('cDiferencia');el.textContent=(d>0?'+':'')+dinero(d);el.className=d<0?'faltante':d>0?'sobrante':'ok'}
+function cerrarJornada(){
+  const r=resumen();if(r.activos>0)return error('errorCorte','Finaliza todos los turnos antes de cerrar.');
+  const efectivo=Number(document.getElementById('campoEfectivo').value);if(!Number.isFinite(efectivo)||efectivo<0)return error('errorCorte','Escribe un efectivo válido.');
+  if(!confirm('¿Confirmas el cierre de la jornada?'))return;
+  datos.cortes.push({id:id('COR'),jornada:datos.jornada,fechaCierre:new Date().toISOString(),resumen:r,efectivo,diferencia:efectivo-r.pagado,observaciones:document.getElementById('campoObs').value.trim(),turnos:[...datos.turnos]});
+  datos.historial.push(...datos.turnos);datos.jornada=null;datos.turnos=[];guardar();cerrarModal('modalCorte');render();aviso('Jornada cerrada correctamente.')
+}
+document.addEventListener('DOMContentLoaded',iniciar);
+</script>
+</body>
+</html>
