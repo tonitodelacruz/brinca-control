@@ -64,13 +64,24 @@
     .diferencia{margin-top:14px;padding:15px;border-radius:12px;background:var(--azul2);text-align:center}.diferencia span{display:block;color:var(--gris);font-size:13px}.diferencia strong{display:block;margin-top:5px;font-size:24px}
     .ok{color:var(--verde)}.faltante{color:var(--rojo)}.sobrante{color:var(--naranja)}
     .aviso{position:fixed;z-index:2000;left:50%;bottom:20px;width:calc(100% - 32px);max-width:450px;padding:13px 16px;color:#fff;background:#1f2937;border-radius:12px;text-align:center;transform:translateX(-50%);box-shadow:var(--sombra)}
+
+    .config-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .config-grid .campo-grupo{min-width:0}
+    .config-grid label{margin-top:0}
+    .historial-lista{display:grid;gap:10px;margin-top:14px}
+    .historial-item{display:grid;grid-template-columns:1fr auto;gap:8px;padding:14px;background:#f8fafc;border:1px solid var(--borde);border-radius:12px}
+    .historial-fecha{font-weight:700;color:var(--azul)}
+    .historial-encargado{margin-top:4px;color:var(--gris);font-size:13px}
+    .historial-total{align-self:center;color:var(--verde);font-size:21px;font-weight:700}
+    .nota-config{margin-top:12px;padding:11px 12px;background:var(--azul2);color:var(--gris);border-radius:10px;font-size:13px;line-height:1.4}
+
     @media(min-width:700px){.resumen{grid-template-columns:repeat(4,1fr)}.acciones{grid-template-columns:2fr 1fr}.acciones-turno{grid-template-columns:repeat(4,1fr)}.encabezado{margin-top:15px;border-radius:24px}}
   </style>
 </head>
 <body>
 <div class="app">
   <header class="encabezado">
-    <h1>BrincaControl</h1><p>MobiRent</p>
+    <h1 id="tituloApp">BrincaControl</h1><p id="nombreNegocio">MobiRent</p>
     <div id="reloj" class="reloj">--:--:--</div><div id="fecha" class="fecha"></div>
   </header>
   <main class="contenido">
@@ -93,6 +104,8 @@
       <div class="acciones">
         <button id="btnAgregar" class="boton primario" disabled>+ Agregar niño</button>
         <button id="btnJornada" class="boton secundario">Abrir jornada</button>
+        <button id="btnConfig" class="boton secundario">⚙️ Configuración</button>
+        <button id="btnHistorial" class="boton secundario">📅 Últimas jornadas</button>
       </div>
     </section>
     <section class="panel"><h2>Turnos activos</h2><div id="lista" class="lista"><div class="sin-turnos">Todavía no hay niños registrados.</div></div></section>
@@ -132,17 +145,90 @@
   <div class="modal-actions"><button class="boton secundario" onclick="cerrarModal('modalCorte')">Cancelar</button><button class="boton peligro" onclick="cerrarJornada()">Cerrar jornada</button></div>
 </div></div>
 
+
+<div id="modalConfig" class="modal oculto"><div class="modal-bg"></div><div class="modal-box">
+  <h2>Configuración</h2><p>Los cambios se guardan únicamente en este dispositivo y se aplican a los nuevos turnos.</p>
+
+  <label>Nombre del negocio</label>
+  <input id="cfgNegocio" class="campo" maxlength="50">
+
+  <label>Nombre de la aplicación</label>
+  <input id="cfgApp" class="campo" maxlength="50">
+
+  <div class="config-grid">
+    <div class="campo-grupo">
+      <label>Minutos por turno</label>
+      <input id="cfgMinutos" class="campo" type="number" min="1" max="180">
+    </div>
+    <div class="campo-grupo">
+      <label>Precio por turno</label>
+      <input id="cfgPrecio" class="campo" type="number" min="0" step="0.01">
+    </div>
+    <div class="campo-grupo">
+      <label>Capacidad máxima</label>
+      <input id="cfgCapacidad" class="campo" type="number" min="1" max="50">
+    </div>
+    <div class="campo-grupo">
+      <label>Aviso previo (min)</label>
+      <input id="cfgAviso" class="campo" type="number" min="0" max="30">
+    </div>
+    <div class="campo-grupo">
+      <label>Adicional corto (min)</label>
+      <input id="cfgMinCorto" class="campo" type="number" min="1" max="60">
+    </div>
+    <div class="campo-grupo">
+      <label>Precio adicional corto</label>
+      <input id="cfgPrecioCorto" class="campo" type="number" min="0" step="0.01">
+    </div>
+    <div class="campo-grupo">
+      <label>Adicional largo (min)</label>
+      <input id="cfgMinLargo" class="campo" type="number" min="1" max="120">
+    </div>
+    <div class="campo-grupo">
+      <label>Precio adicional largo</label>
+      <input id="cfgPrecioLargo" class="campo" type="number" min="0" step="0.01">
+    </div>
+  </div>
+
+  <div class="nota-config">
+    Los turnos que ya están activos conservarán sus minutos y costos actuales. La nueva configuración se aplicará al siguiente niño que registres.
+  </div>
+
+  <div id="errorConfig" class="error oculto"></div>
+  <div class="modal-actions">
+    <button class="boton secundario" onclick="cerrarModal('modalConfig')">Cancelar</button>
+    <button class="boton primario" onclick="guardarConfiguracion()">Guardar</button>
+  </div>
+</div></div>
+
+<div id="modalHistorial" class="modal oculto"><div class="modal-bg"></div><div class="modal-box">
+  <h2>Últimas 7 jornadas</h2>
+  <p>Resumen general de fecha, encargado y total cobrado.</p>
+  <div id="historialLista" class="historial-lista"></div>
+  <button class="boton secundario" style="margin-top:18px" onclick="cerrarModal('modalHistorial')">Cerrar</button>
+</div></div>
+
 <div id="aviso" class="aviso oculto"></div>
 
 <script>
-const CONFIG={minutos:10,precio:20,minCorto:5,precioCorto:10,minLargo:10,precioLargo:20,aviso:2,capacidad:5};
+const CONFIG_PREDETERMINADA={negocio:'MobiRent',app:'BrincaControl',minutos:10,precio:20,minCorto:5,precioCorto:10,minLargo:10,precioLargo:20,aviso:2,capacidad:5};
+let CONFIG={...CONFIG_PREDETERMINADA};
 const CLAVE='brincaControlDatosV1';
 let datos=cargarDatos();
 let avisados=new Set();
 
 function cargarDatos(){
-  try{return JSON.parse(localStorage.getItem(CLAVE))||{jornada:null,turnos:[],historial:[],cortes:[]}}
-  catch(e){return{jornada:null,turnos:[],historial:[],cortes:[]}}
+  let base={jornada:null,turnos:[],historial:[],cortes:[],config:{...CONFIG_PREDETERMINADA}};
+  try{
+    const guardado=JSON.parse(localStorage.getItem(CLAVE));
+    if(guardado&&typeof guardado==='object') base={...base,...guardado};
+  }catch(e){}
+  base.turnos=Array.isArray(base.turnos)?base.turnos:[];
+  base.historial=Array.isArray(base.historial)?base.historial:[];
+  base.cortes=Array.isArray(base.cortes)?base.cortes:[];
+  base.config={...CONFIG_PREDETERMINADA,...(base.config||{})};
+  CONFIG={...base.config};
+  return base;
 }
 function guardar(){localStorage.setItem(CLAVE,JSON.stringify(datos))}
 function id(pref){return pref+'-'+Date.now()+'-'+Math.floor(1000+Math.random()*9000)}
@@ -165,6 +251,8 @@ function iniciar(){
   document.getElementById('btnJornada').onclick=()=>mostrarModal('modalJornada');
   document.getElementById('btnAgregar').onclick=()=>mostrarModal('modalTurno');
   document.getElementById('btnCorte').onclick=abrirCorte;
+  document.getElementById('btnConfig').onclick=abrirConfiguracion;
+  document.getElementById('btnHistorial').onclick=abrirHistorial;
   window.addEventListener('online',actualizarRed);window.addEventListener('offline',actualizarRed);
   actualizarRed();render();
   if('serviceWorker' in navigator){navigator.serviceWorker.register('./service-worker.js').catch(console.error)}
@@ -181,14 +269,27 @@ function actualizarReloj(){
 }
 function render(){
   const j=datos.jornada;
+  document.getElementById('tituloApp').textContent=CONFIG.app;
+  document.getElementById('nombreNegocio').textContent=CONFIG.negocio;
+  document.querySelectorAll('.fila').forEach(()=>{});
   document.getElementById('estadoJornada').textContent=j?'Abierta desde '+j.horaApertura:'Sin abrir';
   document.getElementById('encargado').textContent=j?j.encargado:'Sin asignar';
   document.getElementById('btnJornada').disabled=!!j;document.getElementById('btnJornada').textContent=j?'Jornada abierta':'Abrir jornada';
   document.getElementById('btnAgregar').disabled=!j;document.getElementById('btnCorte').disabled=!j;
+  const filas=document.querySelectorAll('.panel .fila');
+  if(filas[2]) filas[2].querySelector('span:last-child').textContent=CONFIG.minutos+' minutos por '+dinero(CONFIG.precio);
+  if(filas[3]) filas[3].querySelector('span:last-child').textContent=CONFIG.aviso+' minutos antes';
+  document.querySelectorAll('.resumen-item .resumen-valor')[1].textContent=CONFIG.capacidad;
   const r=resumen();document.getElementById('activos').textContent=r.activos;document.getElementById('atendidos').textContent=r.atendidos;document.getElementById('generado').textContent=dinero(r.generado);
   renderTurnos();
 }
-function mostrarModal(id){document.getElementById(id).classList.remove('oculto')}
+function mostrarModal(id){
+  if(id==='modalTurno'){
+    const p=document.querySelector('#modalTurno .modal-box p');
+    if(p)p.textContent='Turno de '+CONFIG.minutos+' minutos por '+dinero(CONFIG.precio)+'.';
+  }
+  document.getElementById(id).classList.remove('oculto')
+}
 function cerrarModal(id){document.getElementById(id).classList.add('oculto')}
 function error(id,msg){const e=document.getElementById(id);e.textContent=msg;e.classList.remove('oculto')}
 function limpiarError(id){document.getElementById(id).classList.add('oculto')}
@@ -266,6 +367,62 @@ function cerrarJornada(){
   datos.cortes.push({id:id('COR'),jornada:datos.jornada,fechaCierre:new Date().toISOString(),resumen:r,efectivo,diferencia:efectivo-r.pagado,observaciones:document.getElementById('campoObs').value.trim(),turnos:[...datos.turnos]});
   datos.historial.push(...datos.turnos);datos.jornada=null;datos.turnos=[];guardar();cerrarModal('modalCorte');render();aviso('Jornada cerrada correctamente.')
 }
+
+function abrirConfiguracion(){
+  document.getElementById('cfgNegocio').value=CONFIG.negocio;
+  document.getElementById('cfgApp').value=CONFIG.app;
+  document.getElementById('cfgMinutos').value=CONFIG.minutos;
+  document.getElementById('cfgPrecio').value=CONFIG.precio;
+  document.getElementById('cfgCapacidad').value=CONFIG.capacidad;
+  document.getElementById('cfgAviso').value=CONFIG.aviso;
+  document.getElementById('cfgMinCorto').value=CONFIG.minCorto;
+  document.getElementById('cfgPrecioCorto').value=CONFIG.precioCorto;
+  document.getElementById('cfgMinLargo').value=CONFIG.minLargo;
+  document.getElementById('cfgPrecioLargo').value=CONFIG.precioLargo;
+  limpiarError('errorConfig');
+  mostrarModal('modalConfig');
+}
+function numeroConfig(id,minimo,mensaje){
+  const n=Number(document.getElementById(id).value);
+  if(!Number.isFinite(n)||n<minimo) throw new Error(mensaje);
+  return n;
+}
+function guardarConfiguracion(){
+  try{
+    const nueva={
+      negocio:document.getElementById('cfgNegocio').value.trim()||'MobiRent',
+      app:document.getElementById('cfgApp').value.trim()||'BrincaControl',
+      minutos:numeroConfig('cfgMinutos',1,'Los minutos por turno deben ser mayores a cero.'),
+      precio:numeroConfig('cfgPrecio',0,'Escribe un precio válido.'),
+      capacidad:numeroConfig('cfgCapacidad',1,'La capacidad debe ser al menos 1.'),
+      aviso:numeroConfig('cfgAviso',0,'Escribe un aviso previo válido.'),
+      minCorto:numeroConfig('cfgMinCorto',1,'El adicional corto debe ser mayor a cero.'),
+      precioCorto:numeroConfig('cfgPrecioCorto',0,'Escribe un precio adicional corto válido.'),
+      minLargo:numeroConfig('cfgMinLargo',1,'El adicional largo debe ser mayor a cero.'),
+      precioLargo:numeroConfig('cfgPrecioLargo',0,'Escribe un precio adicional largo válido.')
+    };
+    if(activos().length>nueva.capacidad){
+      throw new Error('Actualmente hay '+activos().length+' niños activos. La capacidad no puede quedar por debajo de ese número.');
+    }
+    CONFIG={...nueva};datos.config={...nueva};guardar();cerrarModal('modalConfig');render();aviso('Configuración guardada.');
+  }catch(e){error('errorConfig',e.message||'No fue posible guardar la configuración.')}
+}
+function abrirHistorial(){
+  const lista=document.getElementById('historialLista');
+  const ultimas=[...datos.cortes].sort((a,b)=>new Date(b.fechaCierre)-new Date(a.fechaCierre)).slice(0,7);
+  if(!ultimas.length){
+    lista.innerHTML='<div class="sin-turnos">Todavía no hay jornadas cerradas.</div>';
+  }else{
+    lista.innerHTML=ultimas.map(c=>{
+      const fecha=new Date(c.fechaCierre).toLocaleDateString('es-MX',{day:'2-digit',month:'short',year:'numeric'});
+      const encargado=c.jornada&&c.jornada.encargado?c.jornada.encargado:'Sin encargado';
+      const total=c.resumen?c.resumen.pagado:0;
+      return '<div class="historial-item"><div><div class="historial-fecha">'+fecha+'</div><div class="historial-encargado">'+escapar(encargado)+'</div></div><div class="historial-total">'+dinero(total)+'</div></div>';
+    }).join('');
+  }
+  mostrarModal('modalHistorial');
+}
+
 document.addEventListener('DOMContentLoaded',iniciar);
 </script>
 </body>
